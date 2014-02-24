@@ -21,7 +21,20 @@ GUIElement.prototype.update = function() {
 };
 
 GUIElement.prototype.addChild = function(child) {
+    var index = this.children.indexOf(child);
 
+    if(index < 0) {
+        if(child.parent != this) {
+            child.parent = this;
+            child.pubSub.emit("ParentAdded", {parent : this});
+        }
+
+        this.children.push(child);
+        this.pubSub.emit("ChildAdded", {child : child});
+        return true;
+    }
+
+    return false;
 };
 
 GUIElement.prototype.removeChild = function(child) {
@@ -29,10 +42,12 @@ GUIElement.prototype.removeChild = function(child) {
     if(index >= 0) {
         if(child.parent == this) {
             child.parent = undefined;
+            child.pubSub.emit("ParentRemoved", {parent : this});
         }
 
         this.children.splice(index, 1);
         this.pubSub.emit("ChildRemoved", {child:child});
+        return true;
     }
 
     return false;

@@ -1,4 +1,5 @@
-var GUIElement = function(parent, pubSub, name) {
+var GUIElement = function(scene, parent, pubSub, name) {
+    this.scene = scene;
     this.name = name;
 
     this.active = true;
@@ -11,6 +12,8 @@ var GUIElement = function(parent, pubSub, name) {
 
     this.selected = false;
     this.mouseOver = false;
+    this.mouseOverTime = 0;
+    this.mouseOverElapsedTime = 0;
 
     this.lastSelected = this.selected;
     this.lastMouseOver = this.mouseOver;
@@ -34,10 +37,10 @@ var GUIElement = function(parent, pubSub, name) {
 };
 
 GUIElement.prototype.render = function() {
-    if(!active) return;
+    if(!this.active) return;
 
-    if(!visible) {
-        // TODO render grayscale?
+    if(!this.visible) {
+        this.pubSub.emit("RenderDisabled");
         return;
     }
 
@@ -45,7 +48,7 @@ GUIElement.prototype.render = function() {
 };
 
 GUIElement.prototype.update = function() {
-    if(!active) return;
+    if(!this.active) return;
 
     this.monitorState();
     this.pubSub.emit("Update");
@@ -98,8 +101,86 @@ GUIElement.prototype.getChildByName = function(name) {
     return undefined;
 };
 
-GUIElement.property.monitorState = function() {
+GUIElement.prototype.monitorMovement = function () {
+    if (this.x != this.lastX || this.y != this.lastY) {
+        this.pubSub.emit("Moving", {lastX: this.lastX, lastY: this.lastY, x: this.x, y: this.y});
 
+        this.lastX = this.x;
+        this.lastY = this.y;
+    }
+};
+
+GUIElement.prototype.monitorSize = function () {
+    if (this.width != this.lastWidth || this.height != this.lastHeight) {
+        this.pubSub.emit("SizeChanged",
+            {   // emit arguments
+                lastWidth: this.lastWidth,
+                lastHeight: this.lastHeight,
+                width: this.width,
+                height: this.height
+            }
+        );
+    }
+};
+
+GUIElement.prototype.monitorSelected = function () {
+    if (this.lastSelected === false && this.selected === true) {
+        this.pubSub.emit("Selected");
+        this.lastSelected = this.selected;
+    } else if (this.lastSelected === true && this.selected === false) {
+        this.pubSub.emit("Deselected");
+        this.lastSelected = this.selected;
+    }
+};
+
+GUIElement.prototype.monitorMouseOver = function () {
+    if (this.mouseOver === true && this.lastMouseOver === true) {
+        this.mouseOverElapsedTime = Date.now() - this.mouseOverTime;
+        this.pubSub.emit("MouseStay", {time: this.mouseOverTime, elapsed: this.mouseOverElapsedTime});
+    } else if (this.mouseOver === true && this.lastMouseOver === false) {
+        this.mouseOverTime = Date.now();
+        this.pubSub.emit("MouseEnter", {time: this.mouseOverTime});
+        this.lastMouseOver = this.mouseOver;
+    } else if (this.mouseOver === false && this.lastMouseOver === true) {
+        this.pubSub.emit("MouseExit");
+
+        this.lastMouseOver = this.mouseOver;
+        this.mouseOverTime = 0;
+        this.mouseOverElapsedTime = 0;
+    }
+};
+
+GUIElement.prototype.monitorVisibility = function () {
+    if (this.visible != this.lastVisible) {
+        if (this.visible) {
+            this.pubSub.emit("Revealed");
+        } else {
+            this.pubSub.emit("Hidden");
+        }
+
+        this.lastVisible = this.visible;
+    }
+};
+
+GUIElement.prototype.monitorActivity = function () {
+    if (this.active != this.lastActive) {
+        if (this.active) {
+            this.pubSub.emit("Enabled");
+        } else {
+            this.pubSub.emit("Disabled");
+        }
+
+        this.lastActive = this.active;
+    }
+};
+
+GUIElement.prototype.monitorState = function() {
+    this.monitorMovement();
+    this.monitorSize();
+    this.monitorSelected();
+    this.monitorMouseOver();
+    this.monitorActivity();
+    this.monitorVisibility();
 };
 
 var createGUIElement = function() {

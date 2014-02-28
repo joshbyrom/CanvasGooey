@@ -71,6 +71,37 @@ GUIElement.prototype.addChild = function(child) {
     return false;
 };
 
+GUIElement.prototype.addChildBefore = function(child, before) {
+    var beforeIndex = this.children.indexOf(before);
+    var index = this.children.indexOf(child);
+
+    if(index < 0 && beforeIndex >= 0) {
+        this.children.splice(beforeIndex, 0, child);
+        this.pubSub.emit("ChildAdded", {child:child});
+        return true;
+    }
+
+    return false;
+};
+
+GUIElement.prototype.addChildAfter = function(child, after) {
+    var afterIndex = this.children.indexOf(after);
+    var index = this.children.indexOf(child);
+
+    if(index < 0 && afterIndex >= 0) {
+        if(afterIndex + 1 > this.children.length) {
+            this.children.push(child);
+        } else {
+            this.children.splice(afterIndex+1, 0, child);
+        }
+
+        this.pubSub.emit("ChildAdded", {child:child});
+        return true;
+    }
+
+    return false;
+};
+
 GUIElement.prototype.removeChild = function(child) {
     var index = this.children.indexOf(child);
     if(index >= 0) {

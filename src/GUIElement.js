@@ -39,6 +39,8 @@ var GUIElement = function(scene, parent, pubSub, name) {
 GUIElement.prototype.render = function(context) {
     if(!this.active) return;
 
+    context.save();
+
     if(!this.visible) {
         this.pubSub.emit("RenderDisabled");
     } else {
@@ -48,12 +50,14 @@ GUIElement.prototype.render = function(context) {
     for(var i = 0; i < this.children.length; ++i) {
         this.children[i].render(context);
     }
+
+    context.restore();
 };
 
 GUIElement.prototype.update = function(elapsed) {
     this.monitorState();
 
-    if(!this.active) return;
+    if(!this.active) {}
     else {
         this.pubSub.emit("Update", {elapsed:elapsed});
         for(var i = 0; i < this.children.length; ++i) {

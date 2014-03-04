@@ -2,6 +2,8 @@ var CanvasGooey = function(canvas, targetFPS) {
     this.canvasID = canvas;
     this.canvasElement = document.getElementById(this.canvasID);
 
+    this.canvasElement.onmousemove = this.onMouseMove.bind(this);
+
     this.context = this.canvasElement.getContext("2d");
     this.pubSub = new GUIPubSub();
 
@@ -10,6 +12,19 @@ var CanvasGooey = function(canvas, targetFPS) {
     this.lastUpdateTime = -1;
 
     this.active = false;
+};
+
+CanvasGooey.prototype.onMouseMove = function(e) {
+    var loc = this.windowToCanvas(e.clientX, e.clientY);
+
+};
+
+CanvasGooey.prototype.windowToCanvas = function(x, y) {
+    var boundingBox = this.canvasElement.getBoundingClientRect();
+    return {
+        x : (x - boundingBox.left) * (this.canvasElement.width / boundingBox.width),
+        y : (y - boundingBox.top) * (this.canvasElement.height / boundingBox.height)
+    };
 };
 
 CanvasGooey.prototype.start = function(process, callback, scope) {

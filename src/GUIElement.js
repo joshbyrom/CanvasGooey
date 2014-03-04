@@ -36,22 +36,30 @@ var GUIElement = function(scene, parent, pubSub, name) {
     this.children = [];
 };
 
-GUIElement.prototype.render = function() {
+GUIElement.prototype.render = function(context) {
     if(!this.active) return;
 
     if(!this.visible) {
         this.pubSub.emit("RenderDisabled");
-        return;
+    } else {
+      this.pubSub.emit("Render", {context:context});
     }
 
-    this.pubSub.emit("Render");
+    for(var i = 0; i < this.children.length; ++i) {
+        this.children[i].render(context);
+    }
 };
 
-GUIElement.prototype.update = function() {
-    if(!this.active) return;
-
+GUIElement.prototype.update = function(elapsed) {
     this.monitorState();
-    this.pubSub.emit("Update");
+
+    if(!this.active) return;
+    else {
+        this.pubSub.emit("Update", {elapsed:elapsed});
+        for(var i = 0; i < this.children.length; ++i) {
+            this.children[i].update(elapsed);
+        }
+    }
 };
 
 GUIElement.prototype.addChild = function(child) {
@@ -212,8 +220,4 @@ GUIElement.prototype.monitorState = function() {
     this.monitorMouseOver();
     this.monitorActivity();
     this.monitorVisibility();
-};
-
-var createGUIElement = function() {
-
 };

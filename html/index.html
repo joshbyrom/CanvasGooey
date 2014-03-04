@@ -7,14 +7,25 @@
 
     <link rel="stylesheet" type="text/css" href="../css/style.css" />
 
+    <script type="text/javascript" src="../src/GUIPubSub.js"></script>
+    <script type="text/javascript" src="../src/GUIElement.js"></script>
     <script type="text/javascript" src="../src/CanvasGooey.js"></script>
-    <script type="text/javascript">
-        var element = new GUIPubSub();
-    </script>
+
 </head>
 <body>
     <canvas id="canvas" width="800" height="448">
         Canvas not supported
     </canvas>
+
+    <script type="text/javascript">
+        var gui = new CanvasGooey("canvas");
+
+        var button = gui.createElement(undefined, "Button1");
+        button.pubSub.on("Update", function() {
+            console.log("button is updating");
+        });
+
+        gui.start(function onUpdate() {}, function onFinished() {});
+    </script>
 </body>
 </html>
